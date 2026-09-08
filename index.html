@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة التحكم | إدارة المطعم</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .admin-container {
+      padding: 40px 0;
+    }
+    .admin-nav {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 15px;
+    }
+    .admin-tab {
+      padding: 10px 20px;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .admin-tab.active {
+      background: var(--gold);
+      color: #211507;
+      border-color: var(--gold);
+    }
+    .admin-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+    .admin-card h3 {
+      margin-bottom: 15px;
+      color: var(--gold-light);
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 13px;
+    }
+    .admin-table th, .admin-table td {
+      padding: 12px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+    }
+    .admin-table th {
+      background: var(--card-2);
+      color: var(--gold-light);
+    }
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .status-new { background: #1976d2; color: #fff; }
+    .status-preparing { background: #f57c00; color: #fff; }
+    .status-completed { background: #388e3c; color: #fff; }
+    .status-cancelled { background: #d32f2f; color: #fff; }
+    .action-btn {
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      margin-left: 5px;
+    }
+    .btn-edit { background: var(--gold); color: #211507; }
+    .btn-delete { background: var(--danger); color: #fff; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .admin-table { display: block; overflow-x: auto; }
+    }
+
+    /* ====== جديد: زر الخروج ومؤشر الاتصال الفوري ====== */
+    .admin-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .realtime-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .realtime-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #888;
+    }
+    .realtime-indicator.connected .realtime-dot {
+      background: #4caf50;
+      box-shadow: 0 0 8px #4caf50;
+      animation: pulse 1.6s infinite;
+    }
+    .realtime-indicator.disconnected .realtime-dot {
+      background: var(--danger);
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .logout-button {
+      padding: 8px 16px;
+      color: var(--danger);
+      background: transparent;
+      border: 1px solid rgba(239, 83, 80, 0.4);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      transition: 0.25s;
+    }
+    .logout-button:hover {
+      color: #fff;
+      background: var(--danger);
+    }
+
+    /* ====== جديد: إشعار الطلبات الفوري (Toast) ====== */
+    #toastContainer {
+      position: fixed;
+      top: 84px;
+      left: 18px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: min(360px, calc(100vw - 36px));
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: #1d1b16;
+      border: 1px solid rgba(244, 155, 36, 0.55);
+      border-right: 4px solid var(--gold);
+      border-radius: 10px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+      animation: toastIn 0.35s ease;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .toast.hide {
+      animation: toastOut 0.3s ease forwards;
+    }
+    .toast-icon {
+      font-size: 22px;
+    }
+    .toast strong {
+      display: block;
+      color: var(--gold-light);
+      font-size: 13px;
+    }
+    .toast span {
+      color: var(--muted);
+    }
+    @keyframes toastIn {
+      from { transform: translateX(-30px); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes toastOut {
+      to { transform: translateX(-30px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- شريط العلوي -->
+  <header class="navbar">
+    <div class="container navbar-content">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">🔥</span>
+        <span>لوحة التحكم</span>
+      </a>
+      <div class="admin-top-actions">
+        <div class="realtime-indicator" id="realtimeIndicator">
+          <span class="realtime-dot"></span>
+          <span id="realtimeText">جاري الاتصال...</span>
+        </div>
+        <a href="index.html" class="secondary-button" style="min-height:38px; padding:0 15px;">العودة للموقع ↗</a>
+        <button class="logout-button" id="logoutButton">🚪 خروج</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- حاوية الإشعارات الفورية -->
+  <div id="toastContainer"></div>
+
+  <main class="container admin-container">
+    <!-- تبويبات التصفح -->
+    <div class="admin-nav">
+      <button class="admin-tab active" data-tab="orders">📦 إدارة الطلبات</button>
+      <button class="admin-tab" data-tab="products">🍔 إدارة الوجبات</button>
+    </div>
+
+    <!-- قسم الطلبات -->
+    <section id="ordersSection">
+      <div class="admin-card">
+        <h3>قائمة الطلبات المستلمة</h3>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>رقم الطلب</th>
+              <th>العميل</th>
+              <th>الهاتف</th>
+              <th>العنوان</th>
+              <th>الإجمالي</th>
+              <th>الحالة</th>
+              <th>التاريخ</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <!-- يتم تعبئتها بواسطة JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- قسم الوجبات -->
+    <section id="productsSection" class="hidden">
+      <!-- نموذج إضافة/تعديل وجبة -->
+      <div class="admin-card">
+        <h3 id="formTitle">إضافة وجبة جديدة</h3>
+        <form id="productForm">
+          <input type="hidden" id="productId" />
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="pName">اسم الوجبة</label>
+              <input type="text" id="pName" required placeholder="مثال: كباب مشوي" />
+            </div>
+            <div class="form-group">
+              <label for="pCategory">التصنيف</label>
+              <input type="text" id="pCategory" required placeholder="مشويات، وجبات، ساندوتشات..." />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="pPrice">السعر (جنيه)</label>
+              <input type="number" id="pPrice" required placeholder="150" />
+            </div>
+            <div class="form-group">
+              <label for="pImage">رابط الصورة (URL)</label>
+              <input type="url" id="pImage" required placeholder="https://example.com/image.jpg" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="pDescription">الوصف</label>
+            <textarea id="pDescription" rows="2" placeholder="وصف مكونات الوجبة..."></textarea>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button type="submit" class="primary-button" id="saveProductBtn">حفظ الوجبة</button>
+            <button type="button" class="secondary-button hidden" id="cancelEditBtn">إلغاء التعديل</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- جدول الوجبات -->
+      <div class="admin-card">
+        <h3>الوجبات الحالية</h3>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>الصورة</th>
+              <th>الاسم</th>
+              <th>التصنيف</th>
+              <th>السعر</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody">
+            <!-- يتم تعبئتها بواسطة JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- ملفات Supabase والبرمجة -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
