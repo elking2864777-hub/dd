@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول | لوحة التحكم</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(244, 155, 36, 0.1), transparent 40%),
+        var(--bg);
+    }
+    .login-card {
+      width: min(400px, calc(100% - 32px));
+      padding: 32px 26px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .login-card .logo {
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .login-card h1 {
+      margin-bottom: 4px;
+      color: var(--white);
+      font-size: 20px;
+      text-align: center;
+    }
+    .login-card > p {
+      margin-bottom: 22px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    .login-error {
+      margin-bottom: 12px;
+      padding: 10px;
+      color: #ff8a80;
+      background: rgba(239, 83, 80, 0.12);
+      border: 1px solid rgba(239, 83, 80, 0.4);
+      border-radius: 8px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .login-back {
+      display: block;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    .login-back:hover { color: var(--gold-light); }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">🔥</span>
+      <span>ابو اليسر</span>
+    </a>
+    <h1>تسجيل الدخول للوحة التحكم</h1>
+    <p>هذه الصفحة مخصصة لإدارة المطعم فقط</p>
+
+    <div class="login-error hidden" id="loginError"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="adminEmail">البريد الإلكتروني</label>
+        <input type="email" id="adminEmail" required placeholder="admin@example.com" autocomplete="username" />
+      </div>
+
+      <div class="form-group">
+        <label for="adminPassword">كلمة المرور</label>
+        <input type="password" id="adminPassword" required placeholder="********" autocomplete="current-password" />
+      </div>
+
+      <button type="submit" class="primary-button full-width" id="loginButton">
+        <span id="loginButtonText">دخول</span>
+        <span id="loginLoader" class="loader hidden"></span>
+      </button>
+    </form>
+
+    <a href="index.html" class="login-back">← العودة إلى الموقع</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script>
+    // لو مسجل دخول بالفعل، ادخل على اللوحة مباشرة
+    supabaseAuthClient.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.href = "admin.html";
+    });
+
+    const loginForm = document.getElementById("loginForm");
+    const loginError = document.getElementById("loginError");
+    const loginButtonText = document.getElementById("loginButtonText");
+    const loginLoader = document.getElementById("loginLoader");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginError.classList.add("hidden");
+      loginButtonText.textContent = "جاري التحقق...";
+      loginLoader.classList.remove("hidden");
+
+      const email = document.getElementById("adminEmail").value.trim();
+      const password = document.getElementById("adminPassword").value;
+
+      const { error } = await supabaseAuthClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        loginError.textContent = "بيانات الدخول غير صحيحة، حاول مرة أخرى.";
+        loginError.classList.remove("hidden");
+        loginButtonText.textContent = "دخول";
+        loginLoader.classList.add("hidden");
+      } else {
+        window.location.href = "admin.html";
+      }
+    });
+  </script>
+</body>
+</html>
